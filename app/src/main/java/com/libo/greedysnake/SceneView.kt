@@ -38,6 +38,10 @@ class SceneView @JvmOverloads constructor(
         snakeList.add(0)
         snakeList.add(1)
         snakeList.add(2)
+
+        post {
+            bindListener()
+        }
     }
 
     private var mBinding: ViewSceneBinding = DataBindingUtil.inflate(
@@ -49,6 +53,30 @@ class SceneView @JvmOverloads constructor(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
         horizontalSpace = (measuredWidth/32).toFloat()
+    }
+
+    private fun bindListener() {
+        //注意：不能往当前方法的返方向走
+        mBinding.ivTop.setOnClickListener {
+            if (direction != Direction.DOWN) {
+                direction = Direction.TOP
+            }
+        }
+        mBinding.ivRight.setOnClickListener {
+            if (direction != Direction.LEFT) {
+                direction = Direction.RIGHT
+            }
+        }
+        mBinding.ivBottom.setOnClickListener {
+            if (direction != Direction.TOP) {
+                direction = Direction.DOWN
+            }
+        }
+        mBinding.ivLeft.setOnClickListener {
+            if (direction != Direction.RIGHT) {
+                direction = Direction.LEFT
+            }
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -104,17 +132,17 @@ class SceneView @JvmOverloads constructor(
         //根据当前方向，将蛇移动
         when(direction) {
             Direction.TOP -> {
-
+                snakeList.add(head-100)
             }
             Direction.RIGHT -> {
                 //往头结点左边添加一个节点
                 snakeList.add(head+1)
             }
             Direction.DOWN -> {
-
+                snakeList.add(head+100)
             }
             Direction.LEFT -> {
-
+                snakeList.add(head-1)
             }
         }
 
@@ -122,6 +150,8 @@ class SceneView @JvmOverloads constructor(
         if (snakeList.size > 0) {
             snakeList.remove(snakeList[0])
         }
+
+
     }
 
 }
