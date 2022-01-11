@@ -19,13 +19,13 @@ class SceneView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    var snakePaint: Paint = Paint()
+    private var snakePaint: Paint = Paint()
     var blankPaint: Paint = Paint()
     var horizontalSpace: Float = 0f
     /** 方格间距 */
-    var dividerSpace = 3f
+    private var dividerSpace = 3f
     /** 蛇的路径坐标记录 */
-    var snakeList = ArrayList<Int>()
+    private var snakeList = ArrayList<Int>()
     /** 食物的坐标位置 */
     var foodPos = 13
     var direction: Direction = Direction.RIGHT
@@ -113,7 +113,7 @@ class SceneView @JvmOverloads constructor(
                 invalidate()
             }
 
-        }, 1000, 500)
+        }, 1000, 400)
     }
 
     /**
@@ -127,6 +127,17 @@ class SceneView @JvmOverloads constructor(
      * 继续移动
      */
     fun move() {
+        addHead()
+
+        removeTail()
+
+        handleFood()
+    }
+
+    /**
+     * 添加头节点
+     */
+    private fun addHead() {
         var head = snakeList[snakeList.size-1]  //头结点位置
         //横左边移动+-1，纵坐标移动+-100
         //根据当前方向，将蛇移动
@@ -145,13 +156,31 @@ class SceneView @JvmOverloads constructor(
                 snakeList.add(head-1)
             }
         }
+    }
 
+    /**
+     * 删除尾节点
+     */
+    private fun removeTail() {
         //往当前方向移动一步，头往前一步，需要删除尾节点
         if (snakeList.size > 0) {
             snakeList.remove(snakeList[0])
         }
+    }
 
+    /**
+     * 如果在蛇移动的过程中，包含了食物的位置，那么就吃掉了食物
+     */
+    private fun handleFood() {
+        if (snakeList.contains(foodPos)) {
+            //吃到了食物
 
+            //从全盘面随机生成一个点数，且不再蛇的范围内，作为新生成食物
+            foodPos = (Math.random()*16).toInt()*100 + (Math.random()*32).toInt()
+
+            //蛇头节点长度+1
+            addHead()
+        }
     }
 
 }
