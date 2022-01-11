@@ -7,6 +7,9 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import com.libo.greedysnake.databinding.ViewSceneBinding
 import java.util.*
 import kotlin.collections.ArrayList
@@ -17,7 +20,7 @@ import kotlin.collections.ArrayList
  */
 class SceneView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr) {
+) : ConstraintLayout(context, attrs, defStyleAttr), LifecycleObserver {
 
     private var snakePaint: Paint = Paint()
     var blankPaint: Paint = Paint()
@@ -27,7 +30,7 @@ class SceneView @JvmOverloads constructor(
     /** 蛇的路径坐标记录 */
     private var snakeList = ArrayList<Int>()
     /** 食物的坐标位置 */
-    var foodPos = 13
+    var foodPos = 0
     var direction: Direction = Direction.RIGHT
     var timer: Timer? = null
 
@@ -35,9 +38,7 @@ class SceneView @JvmOverloads constructor(
         snakePaint.color = resources.getColor(R.color.black)
         blankPaint.color = resources.getColor(R.color.half_black)
 
-        snakeList.add(0)
-        snakeList.add(1)
-        snakeList.add(2)
+        restartGame()
 
         post {
             bindListener()
@@ -85,7 +86,7 @@ class SceneView @JvmOverloads constructor(
         //画16*32的方格，而且有间距
         //画16行
         var curPaint: Paint
-        for (j in 0..15) {
+        for (j in 0..17) {
             //画每一行矩形
             for (i in 0..31) {
                 if (snakeList.contains(j*100+i) || foodPos == (j*100+i)) {
@@ -127,7 +128,10 @@ class SceneView @JvmOverloads constructor(
      * 继续移动
      */
     fun move() {
-        addHead()
+        if (addHead()) {
+            restartGame()
+            return
+        }
 
         removeTail()
 
@@ -136,26 +140,49 @@ class SceneView @JvmOverloads constructor(
 
     /**
      * 添加头节点
+     * 返回是否需要重新开始游戏
      */
-    private fun addHead() {
+    private fun addHead(): Boolean {
         var head = snakeList[snakeList.size-1]  //头结点位置
         //横左边移动+-1，纵坐标移动+-100
         //根据当前方向，将蛇移动
         when(direction) {
+            //移动过程中，需要判断是否超出屏幕
             Direction.TOP -> {
-                snakeList.add(head-100)
+                //如果头在第一行，还是向上，那么就失败了
+                if (head < 100) {
+                    //在第一行
+                    return true
+                } else {
+                    snakeList.add(head-100)
+                }
             }
             Direction.RIGHT -> {
-                //往头结点左边添加一个节点
-                snakeList.add(head+1)
+                if (head % 100 == 31) {
+                    //在最右一列
+                    return true
+                } else {
+                    snakeList.add(head+1)
+                }
             }
             Direction.DOWN -> {
-                snakeList.add(head+100)
+                if (head >= 1700) {
+                    //在最后一行
+                    return true
+                } else {
+                    snakeList.add(head+100)
+                }
             }
             Direction.LEFT -> {
-                snakeList.add(head-1)
+                if (head % 100 == 0) {
+                    //在最左一列
+                    return true
+                } else {
+                    snakeList.add(head-1)
+                }
             }
         }
+        return false
     }
 
     /**
@@ -169,6 +196,18 @@ class SceneView @JvmOverloads constructor(
     }
 
     /**
+     * 重新开始游戏
+     */
+    private fun restartGame() {
+        snakeList.clear()
+        snakeList.add(0)
+        snakeList.add(1)
+        snakeList.add(2)
+        foodPos = 13
+        direction = Direction.RIGHT
+    }
+
+    /**
      * 如果在蛇移动的过程中，包含了食物的位置，那么就吃掉了食物
      */
     private fun handleFood() {
@@ -176,11 +215,16 @@ class SceneView @JvmOverloads constructor(
             //吃到了食物
 
             //从全盘面随机生成一个点数，且不再蛇的范围内，作为新生成食物
-            foodPos = (Math.random()*16).toInt()*100 + (Math.random()*32).toInt()
+            foodPos = (Math.random()*18).toInt()*100 + (Math.random()*32).toInt()
 
             //蛇头节点长度+1
             addHead()
         }
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onStop() {
+        stopGame()
     }
 
 }

@@ -2,20 +2,24 @@ package com.libo.greedysnake
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Window
+import android.view.WindowManager
 
 class MainActivity : AppCompatActivity() {
-    var sceneView: SceneView? = null
+    lateinit var sceneView: SceneView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
         setContentView(R.layout.activity_main)
 
         sceneView = findViewById(R.id.sceneView)
-        sceneView?.startGame()
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        sceneView?.stopGame()
+        lifecycle.addObserver(sceneView)
+        sceneView.startGame()
     }
 }
